@@ -105,3 +105,4 @@ This project is licensed under the [MIT License](LICENSE).
 - **Google Search Parsing**: Custom parsing for Google search results.
 - **NLTK**: For tokenizing and analyzing text.
 - **BeautifulSoup**: For HTML content parsing.
+# web-content-analyzer

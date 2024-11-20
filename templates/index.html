@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Content Safety Analyzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .loading {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8">Web Content Safety Analyzer</h1>
+        
+        <!-- Search Form -->
+        <div class="max-w-xl mx-auto mb-8">
+            <form id="searchForm" class="flex gap-4">
+                <input type="text" id="query" name="query" 
+                       class="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Enter search keywords...">
+                <button type="submit" 
+                        class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    Analyze
+                </button>
+            </form>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loading" class="loading text-center mb-8">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+            <p class="mt-2 text-gray-600">Analyzing...</p>
+        </div>
+
+        <!-- Results -->
+        <div id="results" class="grid gap-6"></div>
+    </div>
+
+    <script>
+        document.getElementById('searchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const query = document.getElementById('query').value;
+            if (!query) return;
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').innerHTML = '';
+            
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `query=${encodeURIComponent(query)}`
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Display results
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = '';
+                
+                data.results.forEach(result => {
+                    const card = document.createElement('div');
+                    card.className = `bg-white rounded-lg shadow-md p-6`;
+
+                    // Determine the rating class based on safety rating
+                    const ratingClass = {
+                        'VERY GOOD': 'bg-green-500 border-green-700',
+                        'GOOD': 'bg-blue-500 border-blue-700',
+                        'NORMAL': 'bg-gray-500 border-gray-700',
+                        'BAD': 'bg-red-500 border-red-700',
+                        'VERY BAD': 'bg-black border-black'
+                    }[result.rating.toUpperCase()] || 'bg-gray-500 border-gray-700';
+
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-xl font-semibold">${result.domain}</h2>
+                            <div class="px-4 py-1 text-white rounded-full border ${ratingClass}">
+                                ${result.rating}
+                            </div>
+                        </div>
+                        <p><strong>Safety Score:</strong> ${result.safety_score}</p>
+                        <p><strong>Bad Words Found:</strong> ${result.bad_word_count} / ${result.total_word_count}</p>
+                        <ul>
+                            ${Object.entries(result.category_analysis).map(([category, count]) => `
+                                <li><strong>${category}:</strong> ${count}</li>
+                            `).join('')}
+                        </ul>
+                        <p class="mt-4 text-sm text-blue-600">
+                            <a href="${result.url}" target="_blank" class="underline">
+                                Visit Website: ${result.domain}
+                            </a>
+                        </p>
+                    `;
+                    
+                    resultsDiv.appendChild(card);
+                });
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
