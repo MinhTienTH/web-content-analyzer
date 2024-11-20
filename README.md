@@ -98,10 +98,6 @@ Web Content Analyzer is a Python-based web application that helps analyze the co
 
 This project is licensed under the [MIT License](LICENSE).
 
----
-
-## Acknowledgments
-
 - **Google Search Parsing**: Custom parsing for Google search results.
 - **NLTK**: For tokenizing and analyzing text.
 - **BeautifulSoup**: For HTML content parsing.
